@@ -1,0 +1,65 @@
+const int segmentPins[] = {2, 3, 4, 5, 6, 7, 8};
+const int dpPin = 9;
+const int inputPins[] = {10, 11, 12, 13};
+const int operationPins[] = {A0, A1, A2, A3};
+
+const byte digitSegments[] = {
+  0b00111111, 0b00000110, 0b01011011, 0b01001111,
+  0b01100110, 0b01101101, 0b01111101, 0b00000111,
+  0b01111111, 0b01101111
+};
+
+void displayNumber(int number) {
+  if (number < 0 || number > 9) {
+    for (int i = 0; i < 7; i++) {
+      digitalWrite(segmentPins[i], LOW);
+    }
+    return;
+  }
+  byte segments = digitSegments[number];
+  for (int i = 0; i < 7; i++) {
+    digitalWrite(segmentPins[i], (segments >> i) & 1);
+  }
+}
+
+void setup() {
+  for (int i = 0; i < 7; i++) {
+    pinMode(segmentPins[i], OUTPUT);
+  }
+  pinMode(dpPin, OUTPUT);
+  for (int i = 0; i < 4; i++) {
+    pinMode(inputPins[i], INPUT_PULLUP);
+    pinMode(operationPins[i], INPUT_PULLUP);
+  }
+  displayNumber(-1);
+}
+
+void loop() {
+  int A = digitalRead(inputPins[0]);
+  int B = digitalRead(inputPins[1]);
+  int C = digitalRead(inputPins[2]);
+  int D = digitalRead(inputPins[3]);
+  bool isSum = digitalRead(operationPins[0]) == LOW;
+  bool isSub = digitalRead(operationPins[1]) == LOW;
+  bool isMul = digitalRead(operationPins[2]) == LOW;
+  bool isDiv = digitalRead(operationPins[3]) == LOW;
+  int result = 0;
+  if (isSum) {
+    result = A + B;
+  } else if (isSub) {
+    result = A - B;
+  } else if (isMul) {
+    result = A * B;
+  } else if (isDiv && B != 0) {
+    result = A / B;
+  } else if (C == 1) {
+    result = A & B;
+  } else if (D == 1) {
+    result = A | B;
+  } else {
+    result = A ^ B;
+  }
+  result = abs(result) % 10;
+  displayNumber(result);
+  delay(200);
+}
